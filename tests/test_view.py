@@ -6,11 +6,12 @@ from decimal import Decimal
 from bookforex.view import truncate_two, money_to_float, moneyfmt
 
 
-def test_truncate_two():
-    assert truncate_two(456.678) == 456.67
-    assert truncate_two(456.6) == 456.6
-    assert truncate_two(456) == 456
-    assert truncate_two(456.333) == 456.33
+def test_truncate():
+    assert truncate(456.678, 2) == 456.67
+    assert truncate(456.6, 2) == 456.6
+    assert truncate(456, 2) == 456
+    assert truncate(456.333, 1) == 456.3
+    assert truncate(12.123456, 3) == 12.123
 
 
 def test_money_to_float():

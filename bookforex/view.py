@@ -93,8 +93,8 @@ def validate_trade(request, fixer):
     buy_amount = request.form['buyamount']
     rates = fixer['rates'].get(request.form['buycurrency'])
 
-    buy_amount_fixer = moneyfmt(Decimal(truncate_two(rates *
-                                money_to_float(sell_amount))),
+    buy_amount_fixer = moneyfmt(Decimal(truncate((rates *
+                                money_to_float(sell_amount)), 2)),
                                 places=2, sep='.', dp=',', neg='-')
 
     if ((request.form['sellcurrency'] == fixer['base']) and (rates) and
@@ -104,18 +104,14 @@ def validate_trade(request, fixer):
         return False
 
 
-def truncate_two(number):
+def truncate(number, zeros):
     """Truncate the number without rounding to two decimal places
     (eg. 456.678 -> 456.67)
 
     :param float number: Float to truncate
     :return float
     """
-    n = str(number).split('.')
-    if len(n) == 2:
-        return float(n[0] + '.' + n[1][:2])
-    else:
-        return number
+    return math.floor(number * (10 ** zeros)) / (10 ** zeros)
 
 
 def money_to_float(money):
