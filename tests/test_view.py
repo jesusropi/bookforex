@@ -1,11 +1,16 @@
-""" Test some functions of the module. It is necessary to implement tests for
-views, database and other features, thus guiding the development tests.
-For lack of time, they are included for show the line of work.
-"""
 from decimal import Decimal
-from bookforex.view import truncate_two, money_to_float, moneyfmt
+from pytest_flask.fixtures import client
+from bookforex.view import truncate, money_to_float, moneyfmt, trades_view
 
 
+# Test views
+def test_validate_get_trades_view(client):
+    assert client.get(url_for('trades_view')).status_code == 200
+    #assert response.status_code == 400
+    #assert response.json['message'] == INVALID_ACTION_MESSAGE
+
+
+# Test utils views
 def test_truncate():
     assert truncate(456.678, 2) == 456.67
     assert truncate(456.6, 2) == 456.6
