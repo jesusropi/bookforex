@@ -10,8 +10,6 @@ Dependencies
 ------------
 
  - Python 2.7
- - virtualenv
- - pip 
  - click
  - Flask
  - Flask-SQLAlchemy
