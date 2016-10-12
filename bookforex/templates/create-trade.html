@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+    {% block content %}
+
+    <div class="container">
+        <header>
+            <div class="page-header">
+                <h1>New Trade</h1>
+            </div>
+        </header>
+        <nav>
+        </nav>
+        <section id="main">
+            <article>
+                <form id = "tradeform" class="form-horizontal" action="/trade" method="post">
+                <div class="container">
+                      <!-- Row one -->
+                      <div class="row">
+                          <div class="col-md-3">
+                        <label class="control-label" for="location">Sell Currency</label>
+                        <select id="sellcurrency" name="sellcurrency" class="form-control" ng-required="true">
+                            <!--<option disabled selected value></option>-->
+                          </select>
+                           </div>
+                         
+                          <div class="col-md-3">       
+                            <label class="control-label">Rate</label>
+                            <ul class="list-inline">
+                               <li><span class="glyphicon glyphicon-play"></span></li>
+                               <li><p id="rate" name="rate" class="form-control-static">0</p></li>                         
+                               <li><span class="glyphicon glyphicon-play"></span></li>
+                            </ul>
+                          </div>
+                          
+                          <div class="col-md-3">
+                        <label class="control-label" for="location">Buy Currency</label>
+                        <select id="buycurrency" name="buycurrency" class="form-control" ng-required="true">
+                            <!--<option selected disabled hidden style='display: none' value=''></option>-->
+                            <!--<option disabled selected value></option>-->
+                          </select>
+                          </div>
+                    </div>
+                      
+                      <!--Row two-->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="control-label" for="location">Sell Amount</label>
+                            <input id="sellamount" name="sellamount" class="form-control" type="text" placeholder=""/>
+                            <span id="errmsg"></span>
+                        </div>
+
+                        <div class="col-md-3 col-md-offset-3">
+                            <label class="control-label" for="location">Buy Amount</label>
+                            <input id="buyamount" name="buyamount" class="form-control" type="text" placeholder="" readonly disabled/>
+                            <input id="buyamounth" type="hidden" name="buyamount"/>
+                        </div>
+                    </div>
+                
+                    <!--Row three-->
+                    <div class="row">
+                        <div class="col-md-4 buttonspers">
+                            <button type="submit" class="btn btn-default btn-lg">Create</button>
+                        </div>
+                        <div class="col-md-4 buttonspers col-md-offset-1">
+                            <a class="btn btn-default btn-lg pull-right" href="/" role="button">Cancel</a>
+                        </div>
+                    </div>
+
+                </div>
+                </form>    
+            </article>
+        </section>
+            <aside>
+            </aside>
+    </div>  
+    <script src="static/js/accounting.min.js"></script>
+    <script type=text/javascript>
+    var baseFixierJSON = null;
+    var options = null;
+
+    function updateBaseFixierJSON(base, callback){
+        $.ajax({ 
+           type: "GET",
+           dataType: "jsonp",
+           url: "http://api.fixer.io/latest?base=" + base,
+           success: function(data){        
+               baseFixierJSON = data;
+               baseFixierJSON['rates'][baseFixierJSON['base']] = 1;
+               callback();
+           }
+        });
+    }
+
+    function updateRate(){
+        
+        var rates = baseFixierJSON['rates'];
+        var rate = rates[$('#buycurrency :selected').text()];
+        $('#rate').text(rate);
+    }
+
+    function cut2(num) {
+        return (Math.floor(num * 100)) / 100;
+     }
+
+    function updateBuyAmount(){
+        if ($("#sellamount").val() == ''){
+            $("#buyamount").val('');
+        } else {
+            var sellamount = parseFloat(cleanDots(($("#sellamount").val())));
+            var rate = parseFloat(baseFixierJSON['rates'][$('#buycurrency :selected').text()]);
+            var buyamount = accounting.formatMoney(cut2(rate * cut2(sellamount)), "", 2, ".", ",");
+            $("#buyamount").val(buyamount);
+            $("#buyamounth").val(buyamount);
+        }
+    }
+
+    function cleanDots(str){
+        var withoutDots = 0;
+        var withCommas = 0;
+        withoutDots = str.replace(/\./g, '');
+        withCommas = withoutDots.replace(/,/g, '.');
+        return withCommas;
+    }
+
+    function formatString(str){
+        var strClean = cleanDots(str);
+        var decimal = parseFloat(strClean);
+        var locale = accounting.formatMoney(decimal, "", 0, ".", ",");
+        return locale;
+    }
+                
+    function updateSelectOptions(selectId, options) {
+        var $sel = $('#'.concat(selectId));
+        var option = '<option disabled selected value></option>';
+        $sel.empty();
+        for (var o in options){
+            option += '<option value="'+ options[o] + '">' + options[o] + '</option>';
+        }
+        $sel.html(option);
+        //$sel.val($("#" + selectId +" option:first").val());
+    }
+
+    function getOptions(json){
+        if (json != null) {
+            var rates = json["rates"];
+            var currencies = [];
+            currencies.push(json["base"]);
+            for (var r in rates) {
+                if (rates.hasOwnProperty(r)) {
+                    currencies.push(r);
+                }
+            }
+            return currencies.sort();
+        }
+        return null;
+    }
+
+    $(function () {
+        $.ajax({ 
+           type: "GET",
+           dataType: "jsonp",
+           url: "http://api.fixer.io/latest",
+           success: function(data){        
+               options = getOptions(data);
+               updateSelectOptions("sellcurrency", options);
+               updateSelectOptions("buycurrency", options);
+           }
+        });
+        });
+
+    function sellAmountFormatString(str){
+        if (str == '0'){
+            return str;        
+        } else {
+            //x,
+            if (/,/.test(str)){
+                return str;
+            }
+            else {
+                return accounting.formatMoney(cleanDots(str), "", 0, ".", ",");
+            }
+        }
+    }
+
+    function sellAmountFormatStringBlur(str){
+        var floatRound = cut2(parseFloat(cleanDots(str)));
+        return accounting.formatMoney(floatRound, "", 2, ".", ",");
+    }
+
+    $('#sellcurrency').change(function() {            
+        if ($('#buycurrency :selected').text() != ''){
+            updateBaseFixierJSON($('#sellcurrency :selected').text(), function () {
+                updateRate();
+            });
+        } 
+        if ($("#buycurrency :selected").text() != '' && $("#sellamount").val()){
+            updateBaseFixierJSON($('#sellcurrency :selected').text(), function () {
+                updateBuyAmount();
+            });
+        } else{
+            updateBaseFixierJSON($('#sellcurrency :selected').text(), function(){});
+        }
+        
+    });
+
+    $('#buycurrency').change(function() {
+        if ($('#sellcurrency :selected').text() != ''){
+            console.log("Cambio buycurrency y sellcurrency tiene un valor");
+            updateRate();
+        } 
+        if ($("#sellcurrency :selected").text() != '' && $("#sellamount").val()){
+            console.log("Cambio buycurrency y sellcurrency+sellamount tienen un valor");
+            updateBuyAmount();
+        }
+        
+    });
+
+    // Update buyamount if sellamount changes
+    $("#sellamount").on("change paste keyup", function() {
+        if ($("#sellamount").val() != ''){
+            $("#sellamount").val(sellAmountFormatString($("#sellamount").val()));
+        }
+        if ($('#sellcurrency :selected').text() != '' && $('#buycurrency :selected').text() != ''){
+            updateBuyAmount();
+        }
+    });
+    // Round when focus out
+    $("#sellamount").blur(function (){
+        if ($("#sellamount").val() != '0' && $("#sellamount").val() != ''){
+            $("#sellamount").val(sellAmountFormatStringBlur($("#sellamount").val()));
+        }
+    });    
+
+    // Check if keypress is a number
+    $("#sellamount").keypress(function (e) {
+        //Check: not number or not comma
+        if (e.which != 8 && e.which != 0 && e.which != 188 && ((e.which < 48 && e.which != 44) || e.which > 57)) {
+            $("#errmsg").html("<div class=\"errorvalidate\"><strong>Warning! Decimal numbers with comma, please. </div></strong>").show().delay(2000).fadeOut();
+                   return false;
+        }
+        //Check: x,,
+        if (e.which == 44 && /,/.test($("#sellamount").val())){
+            $("#errmsg").html("<div class=\"errorvalidate\"><strong>Warning! Only one comma, please.</strong> </div>").show().delay(2000).fadeOut();
+            return false;
+        }
+        // Check: 00x
+        if ($("#sellamount").val() == '0' && e.which != 44 && e.which != 8){
+            $("#errmsg").html("<div class=\"errorvalidate\"><strong>Warning! After zero goes comma for decimal number.</strong></div>").show().delay(2000).fadeOut();
+            return false;
+        }
+        //Check: /,#/
+        if ($("#sellamount").val() == '' && e.which == 44){
+            $("#errmsg").html("<div class=\"errorvalidate\"><strong>Warning! Please, first insert a number. </strong> </div>").show().delay(2000).fadeOut();
+            return false;
+        }
+    });
+        
+    $(function() {
+      $("#tradeform").validate({
+        rules: {
+          sellcurrency: "required",
+          sellamount: "required",
+          buycurrency: "required"
+        },
+        messages: {
+          sellcurrency: "Please, enter Sell Currency",
+          sellamount: "Please, enter Sell Amount",
+          buycurrency: "Please, enter Buy Currency"
+
+        },
+        submitHandler: function(form) {
+          form.submit();
+        }
+      });
+    });
+        </script>
+{% endblock %}

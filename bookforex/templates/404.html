@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found{% endblock %}
+{% block content %}
+  <h1>I'm sorry, that page does not exist.</h1>
+  <h3>You can try with: <a href="{{ url_for('trades_view') }}">Go somewhere nice!</a></h3>
+  <img src="static/images/ebury.png" alt="Ebury" style="width:653px;height:235px;">
+{% endblock %}

@@ -1,0 +1,12 @@
+.header {
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+.buttonspers {
+  margin-top: 14px;
+}
+
+.errorvalidate {
+	color: #ff0000 !important;
+}
