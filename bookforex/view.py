@@ -150,7 +150,7 @@ def generate_key():
     unique = False
     result = 1
     key = ''
-    while (not unique):
+    while not unique:
         key = generate_id()
         result = db.session.query(db.exists().where(Trade.id == key)).scalar()
         if not result:
